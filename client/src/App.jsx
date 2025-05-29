@@ -41,8 +41,9 @@ const App = () => {
         {/* Sidebar for admin pages */}
         {isAdminPage && <AdminSidebar />}
 
-        <div className="flex-1 ">
+        <div className={`flex-1 ${!isAdminPage ? "mx-4 sm:mx-[10%]" : ""}`}>
           <Routes>
+            {/* <ToastContainer /> */}
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/doctors" element={<Doctors />} />
