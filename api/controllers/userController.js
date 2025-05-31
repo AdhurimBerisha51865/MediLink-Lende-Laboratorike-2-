@@ -2,11 +2,11 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
+import stripe from "stripe";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 
-// API to register user
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -15,17 +15,14 @@ const registerUser = async (req, res) => {
       return res.json({ success: false, message: "Missing Details" });
     }
 
-    // validating email format
     if (!validator.isEmail(email)) {
       return res.json({ success: false, message: "Enter a valid email" });
     }
 
-    // validating strong password
     if (password.length < 8) {
       return res.json({ success: false, message: "Enter a strong password" });
     }
 
-    // Hashing user password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -47,7 +44,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// API for user login
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,7 +67,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// API to get user profile data
 const getProfile = async (req, res) => {
   try {
     const userId = req.userId;
@@ -83,7 +78,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// API to update user profile
 const updateProfile = async (req, res) => {
   try {
     const { name, phone, address, dob, gender } = req.body;
@@ -103,7 +97,6 @@ const updateProfile = async (req, res) => {
     });
 
     if (imageFile) {
-      // upload image to cloudinary
       const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
         resource_type: "image",
       });
@@ -119,7 +112,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// API to book appointment
 const bookAppointment = async (req, res) => {
   try {
     const { docId, slotDate, slotTime } = req.body;
@@ -133,7 +125,6 @@ const bookAppointment = async (req, res) => {
 
     let slots_booked = docData.slots_booked;
 
-    // checking for slots availability
     if (slots_booked[slotDate]) {
       if (slots_booked[slotDate].includes(slotTime)) {
         return res.json({ success: false, message: "Slot not available" });
@@ -163,7 +154,6 @@ const bookAppointment = async (req, res) => {
     const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
 
-    // save new slots data in docData
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
     res.json({ success: true, message: "Appointment Booked" });
@@ -173,7 +163,6 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-// API to get user appointments
 const listAppointment = async (req, res) => {
   try {
     const userId = req.userId;
@@ -186,7 +175,6 @@ const listAppointment = async (req, res) => {
   }
 };
 
-// API to cancel appointment
 const cancelAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -194,7 +182,6 @@ const cancelAppointment = async (req, res) => {
 
     const appointmentData = await appointmentModel.findById(appointmentId);
 
-    // verify appointment user
     if (appointmentData.userId !== userId) {
       return res.json({ success: false, message: "Unauthorized action" });
     }
@@ -203,7 +190,6 @@ const cancelAppointment = async (req, res) => {
       cancelled: true,
     });
 
-    // releasing doctor slot
     const { docId, slotDate, slotTime } = appointmentData;
 
     const doctorData = await doctorModel.findById(docId);
@@ -223,6 +209,74 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
+const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
+
+const paymentStripe = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+    const userId = req.userId;
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.json({ success: false, message: "Appointment not found" });
+    }
+
+    if (appointmentData.userId.toString() !== userId.toString()) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.json({
+        success: false,
+        message: "Cannot pay for a cancelled appointment",
+      });
+    }
+
+    const doctorData = await doctorModel.findById(appointmentData.docId);
+    if (!doctorData) {
+      return res.json({ success: false, message: "Doctor not found" });
+    }
+
+    const amountToPay = doctorData.fees;
+
+    const paymentIntent = await stripeInstance.paymentIntents.create({
+      amount: Math.round(amountToPay * 100),
+      currency: "eur",
+      metadata: { appointmentId },
+    });
+
+    res.json({ success: true, clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const markPaymentSuccess = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+    const userId = req.userId;
+
+    const appointment = await appointmentModel.findById(appointmentId);
+
+    if (!appointment) {
+      return res.json({ success: false, message: "Appointment not found" });
+    }
+
+    if (appointment.userId.toString() !== userId.toString()) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    appointment.payment = true;
+    await appointment.save();
+
+    res.json({ success: true, message: "Payment status updated" });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -231,4 +285,6 @@ export {
   bookAppointment,
   listAppointment,
   cancelAppointment,
+  paymentStripe,
+  markPaymentSuccess,
 };
