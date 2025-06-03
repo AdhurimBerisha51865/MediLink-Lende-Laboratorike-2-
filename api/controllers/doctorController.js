@@ -1,6 +1,7 @@
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import appointmentModel from "../models/appointmentModel.js";
 
 const changeAvailability = async (req, res) => {
   try {
@@ -52,4 +53,64 @@ const loginDoctor = async (req, res) => {
   }
 };
 
-export { changeAvailability, doctorList, loginDoctor };
+const appointmentsDoctor = async (req, res) => {
+  try {
+    const docId = req.doctorId;
+    const appointments = await appointmentModel.find({ docId });
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const appointmentComplete = async (req, res) => {
+  try {
+    const docId = req.doctorId;
+    const { appointmentId } = req.body;
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (appointmentData && appointmentData.docId === docId) {
+      await appointmentModel.findByIdAndUpdate(appointmentId, {
+        isCompleted: true,
+      });
+      return res.json({ success: true, message: "Appointment Completed" });
+    } else {
+      return res.json({ success: false, message: "Mark Failed" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const appointmentCancel = async (req, res) => {
+  try {
+    const docId = req.doctorId;
+    const { appointmentId } = req.body;
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (appointmentData && appointmentData.docId === docId) {
+      await appointmentModel.findByIdAndUpdate(appointmentId, {
+        cancelled: true,
+      });
+      return res.json({ success: true, message: "Appointment Canceled" });
+    } else {
+      return res.json({ success: false, message: "Cancellation Failed" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export {
+  changeAvailability,
+  doctorList,
+  loginDoctor,
+  appointmentsDoctor,
+  appointmentComplete,
+  appointmentCancel,
+};
