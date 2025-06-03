@@ -27,7 +27,7 @@ const Doctors = () => {
   }, [doctors, specialty]);
 
   return (
-    <div>
+    <div className="mx-4 sm:mx-[10%]">
       <p className="text-gray-600">Browse through the doctors specialist</p>
       <div className="flex flex-col sm:flex-row items-start gap-5 mt-5">
         <button
@@ -39,7 +39,7 @@ const Doctors = () => {
           Filters
         </button>
         <div
-          className={` flex-col gap-4 text-sm text-gray-600 ${
+          className={`flex-col gap-4 text-sm text-gray-600 ${
             showFilter ? "flex" : "hidden sm:flex"
           }`}
         >
@@ -70,7 +70,7 @@ const Doctors = () => {
               className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500"
               key={index}
             >
-              <img className="bg-blue-50" src={item.image} alt="" />
+              <img className="bg-blue-50" src={item.image} alt={item.name} />
               <div className="p-4">
                 <div
                   className={`flex items-center gap-2 text-sm text-center ${
