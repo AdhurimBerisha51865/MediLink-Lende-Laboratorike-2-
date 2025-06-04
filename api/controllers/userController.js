@@ -67,6 +67,16 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await userModel.find().select("-password"); // exclude passwords
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 const getProfile = async (req, res) => {
   try {
     const userId = req.userId;
@@ -287,4 +297,5 @@ export {
   cancelAppointment,
   paymentStripe,
   markPaymentSuccess,
+  getAllUsers,
 };
