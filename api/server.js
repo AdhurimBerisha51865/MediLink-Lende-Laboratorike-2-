@@ -6,12 +6,14 @@ import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRoute.js";
 import doctorRouter from "./routes/doctorRoute.js";
 import userRouter from "./routes/userRoute.js";
+import { connectMySQL } from "./config/mysql.js";
 
 // app config
 const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
+connectMySQL();
 
 // middlewares
 app.use(express.json());
