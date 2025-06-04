@@ -102,4 +102,45 @@ async function createDiagnosis(req, res) {
   }
 }
 
-export { createDiagnosis };
+async function getDiagnoses(req, res) {
+  try {
+    const mongoDoctorId = req.doctorId;
+
+    const [doctorRows] = await pool.execute(
+      `SELECT id FROM doctors WHERE mongo_id = ?`,
+      [mongoDoctorId]
+    );
+
+    if (doctorRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    const doctorId = doctorRows[0].id;
+
+    const [diagnoses] = await pool.execute(
+      `SELECT d.*, u.name AS patient_name, u.dob AS patient_dob
+   FROM diagnosis d
+   JOIN users u ON d.user_id = u.id
+   WHERE d.doctor_id = ?
+   ORDER BY d.diagnosis_date DESC`,
+      [doctorId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      diagnoses,
+    });
+  } catch (error) {
+    console.error("Error fetching diagnoses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch diagnoses",
+      error: error.message,
+    });
+  }
+}
+
+export { createDiagnosis, getDiagnoses };

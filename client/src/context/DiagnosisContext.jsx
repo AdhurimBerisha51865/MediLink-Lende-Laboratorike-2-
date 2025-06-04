@@ -11,6 +11,7 @@ const DiagnosisContextProvider = ({ children }) => {
     localStorage.getItem("dToken") ? localStorage.getItem("dToken") : ""
   );
   const [loading, setLoading] = useState(false);
+  const [diagnosisList, setDiagnosisList] = useState([]);
 
   const createDiagnosis = async (diagnosisData) => {
     setLoading(true);
@@ -55,12 +56,39 @@ const DiagnosisContextProvider = ({ children }) => {
     }
   };
 
+  const getDiagnoses = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(
+        backendUrl + "/api/diagnosis/get-diagnosis",
+        {
+          headers: {
+            token: dToken,
+          },
+        }
+      );
+
+      if (data.success) {
+        setDiagnosisList(data.diagnoses);
+      } else {
+        toast.error(data.message || "Failed to fetch diagnoses");
+      }
+    } catch (error) {
+      console.error("Fetch diagnoses error:", error);
+      toast.error("Error fetching diagnoses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     dToken,
     setDToken,
     backendUrl,
     loading,
     createDiagnosis,
+    getDiagnoses,
+    diagnosisList,
   };
 
   return (
