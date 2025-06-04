@@ -1,4 +1,4 @@
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { DoctorContext } from "./DoctorContext";
@@ -51,6 +51,13 @@ const DiagnosisContextProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Clear diagnoses when token is removed
+    if (!dToken) {
+      setDiagnosisList([]);
+    }
+  }, [dToken]);
 
   const getDiagnoses = async () => {
     setLoading(true);
@@ -127,6 +134,7 @@ const DiagnosisContextProvider = ({ children }) => {
     loading,
     createDiagnosis,
     getDiagnoses,
+    setDiagnosisList,
     deleteDiagnosis,
     diagnosisList,
     updateDiagnosis,
