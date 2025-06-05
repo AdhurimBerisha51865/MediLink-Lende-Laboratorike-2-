@@ -5,6 +5,7 @@ import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
+import { pool } from "../config/mysql.js";
 
 const addDoctor = async (req, res) => {
   try {
@@ -185,6 +186,146 @@ const adminDashboard = async (req, res) => {
   }
 };
 
+const getAllDiagnoses = async (req, res) => {
+  try {
+    const [diagnoses] = await pool.execute(
+      `SELECT 
+        d.id AS diagnosis_id, 
+        d.diagnosis_title, 
+        d.description, 
+        d.diagnosis_date,
+        u.id AS user_id, 
+        u.mongo_id AS user_mongo_id,
+        u.name AS patient_name, 
+        u.gender AS patient_gender,
+        u.dob AS patient_dob, 
+        u.phone AS patient_phone,
+        doc.id AS doctor_id,
+        doc.mongo_id AS doctor_mongo_id,
+        doc.name AS doctor_name,
+        doc.email AS doctor_email
+       FROM diagnosis d
+       JOIN users u ON d.user_id = u.id
+       JOIN doctors doc ON d.doctor_id = doc.id
+       ORDER BY d.diagnosis_date DESC`
+    );
+
+    const diagnosisIds = diagnoses.map((d) => d.diagnosis_id);
+    const userMongoIds = diagnoses.map((d) => d.user_mongo_id);
+    const doctorMongoIds = diagnoses.map((d) => d.doctor_mongo_id);
+
+    const [medications, futureCheckups, mongoUsers, mongoDoctors] =
+      await Promise.all([
+        // Medications
+        diagnosisIds.length > 0
+          ? pool
+              .execute(
+                `SELECT diagnosis_id, medication_name, dosage, duration, notes
+             FROM medications
+             WHERE diagnosis_id IN (${diagnosisIds.map(() => "?").join(",")})`,
+                diagnosisIds
+              )
+              .then(([rows]) => rows)
+          : Promise.resolve([]),
+
+        diagnosisIds.length > 0
+          ? pool
+              .execute(
+                `SELECT diagnosis_id, checkup_date, purpose, notes
+             FROM future_checkups
+             WHERE diagnosis_id IN (${diagnosisIds.map(() => "?").join(",")})`,
+                diagnosisIds
+              )
+              .then(([rows]) => rows)
+          : Promise.resolve([]),
+
+        userModel
+          .find({ _id: { $in: userMongoIds } }, { _id: 1, image: 1 })
+          .lean(),
+
+        doctorModel
+          .find(
+            { _id: { $in: doctorMongoIds } },
+            { _id: 1, image: 1, specialty: 1 }
+          )
+          .lean(),
+      ]);
+
+    const medsMap = medications.reduce((acc, med) => {
+      if (!acc[med.diagnosis_id]) acc[med.diagnosis_id] = [];
+      acc[med.diagnosis_id].push({
+        name: med.medication_name,
+        dosage: med.dosage,
+        duration: med.duration,
+        notes: med.notes,
+      });
+      return acc;
+    }, {});
+
+    const checkupsMap = futureCheckups.reduce((acc, checkup) => {
+      if (!acc[checkup.diagnosis_id]) acc[checkup.diagnosis_id] = [];
+      acc[checkup.diagnosis_id].push({
+        date: checkup.checkup_date,
+        purpose: checkup.purpose,
+        notes: checkup.notes,
+      });
+      return acc;
+    }, {});
+
+    const userImageMap = mongoUsers.reduce((acc, user) => {
+      acc[user._id.toString()] = user.image;
+      return acc;
+    }, {});
+
+    const doctorInfoMap = mongoDoctors.reduce((acc, doctor) => {
+      acc[doctor._id.toString()] = {
+        image: doctor.image,
+        specialty: doctor.specialty,
+      };
+      return acc;
+    }, {});
+
+    const enrichedDiagnoses = diagnoses.map((d) => ({
+      id: d.diagnosis_id,
+      title: d.diagnosis_title,
+      description: d.description,
+      date: d.diagnosis_date,
+      patient: {
+        id: d.user_id,
+        mongoId: d.user_mongo_id,
+        name: d.patient_name,
+        gender: d.patient_gender,
+        dob: d.patient_dob,
+        phone: d.patient_phone,
+        image: userImageMap[d.user_mongo_id] || null,
+      },
+      doctor: {
+        id: d.doctor_id,
+        mongoId: d.doctor_mongo_id,
+        name: d.doctor_name,
+        email: d.doctor_email,
+        image: doctorInfoMap[d.doctor_mongo_id]?.image || null,
+        specialty: doctorInfoMap[d.doctor_mongo_id]?.specialty || null,
+      },
+      medications: medsMap[d.diagnosis_id] || [],
+      futureCheckups: checkupsMap[d.diagnosis_id] || [],
+    }));
+
+    return res.status(200).json({
+      success: true,
+      count: enrichedDiagnoses.length,
+      diagnoses: enrichedDiagnoses,
+    });
+  } catch (error) {
+    console.error("Error fetching all diagnoses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch diagnoses",
+      error: error.message,
+    });
+  }
+};
+
 export {
   addDoctor,
   loginAdmin,
@@ -193,4 +334,5 @@ export {
   appointmentCancel,
   adminDashboard,
   appointmentCompleteAdmin,
+  getAllDiagnoses,
 };
