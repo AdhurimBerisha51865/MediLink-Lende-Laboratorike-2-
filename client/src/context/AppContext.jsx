@@ -9,13 +9,12 @@ const AppContextProvider = ({ children }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const [doctors, setDoctors] = useState([]);
-  const [users, setUsers] = useState([]); // <-- New state for users
+  const [users, setUsers] = useState([]);
   const [token, setToken] = useState(
     localStorage.getItem("token") ? localStorage.getItem("token") : false
   );
   const [userData, setUserData] = useState(false);
 
-  // Fetch all doctors
   const getDoctorsData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/doctor/list");
@@ -30,7 +29,6 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Fetch all users (patients) - new function
   const getUsersData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/user/all", {
@@ -47,7 +45,6 @@ const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Load logged-in user profile data
   const loadUserProfileData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/user/get-profile", {
@@ -67,8 +64,8 @@ const AppContextProvider = ({ children }) => {
   const value = {
     doctors,
     getDoctorsData,
-    users, // <-- Provide users state
-    getUsersData, // <-- Provide users fetching function
+    users,
+    getUsersData,
     currencySymbol,
     token,
     setToken,
@@ -85,10 +82,10 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       loadUserProfileData();
-      getUsersData(); // <-- Fetch users when token is available
+      getUsersData();
     } else {
       setUserData(false);
-      setUsers([]); // clear users on logout or no token
+      setUsers([]);
     }
   }, [token]);
 

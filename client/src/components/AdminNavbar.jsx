@@ -8,8 +8,7 @@ import { DiagnosisContext } from "../context/diagnosisContext";
 const AdminNavbar = ({ userType }) => {
   const { setAToken } = useContext(AdminContext);
   const { setDToken } = useContext(DoctorContext);
-  const { setDiagnosisList } = useContext(DiagnosisContext); // <-- Add this
-
+  const { setDiagnosisList } = useContext(DiagnosisContext);
   const navigate = useNavigate();
 
   const logout = () => {
