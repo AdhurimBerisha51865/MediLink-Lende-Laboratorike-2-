@@ -3,6 +3,7 @@ import { DoctorContext } from "../../context/DoctorContext";
 import { assets } from "../../assets/assets";
 import { AppContext } from "../../context/AppContext";
 import { AdminAppContext } from "../../context/AdminAppContext";
+import { DiagnosisContext } from "../../context/DiagnosisContext";
 
 const DoctorDashboard = () => {
   const {
@@ -13,6 +14,7 @@ const DoctorDashboard = () => {
     completeAppointment,
     cancelAppointment,
   } = useContext(DoctorContext);
+  const { getDiagnoses, diagnosisList } = useContext(DiagnosisContext);
   const { currency, slotDateFormat } = useContext(AdminAppContext);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +23,7 @@ const DoctorDashboard = () => {
   useEffect(() => {
     if (dToken) {
       getDashData();
+      getDiagnoses();
     }
   }, [dToken]);
 
@@ -65,6 +68,16 @@ const DoctorDashboard = () => {
                 {dashData.patients}
               </p>
               <p className="text-gray-400">Patients</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white p-4 min-w-52 rounded border-2 border-gray-300 cursor-pointer hover:scale-105 transition-all">
+            <img className="w-14" src={assets.diagnosis_card_icon} alt="" />
+            <div>
+              <p className="text-xl font-semibold text-gray-600">
+                {diagnosisList?.length || 0}
+              </p>
+              <p className="text-gray-400">Diagnoses</p>
             </div>
           </div>
         </div>

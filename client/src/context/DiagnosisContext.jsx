@@ -53,7 +53,6 @@ const DiagnosisContextProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Clear diagnoses when token is removed
     if (!dToken) {
       setDiagnosisList([]);
     }
@@ -120,7 +119,7 @@ const DiagnosisContextProvider = ({ children }) => {
       );
       if (res.data.success) {
         toast.success("Diagnosis updated!");
-        getDiagnoses(); // Refresh
+        getDiagnoses();
       }
     } catch (err) {
       toast.error("Update failed");
