@@ -326,6 +326,54 @@ const getAllDiagnoses = async (req, res) => {
   }
 };
 
+const deleteDoctor = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const deletedDoctor = await doctorModel.findByIdAndDelete(doctorId);
+    if (!deletedDoctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found in MongoDB",
+      });
+    }
+
+    const [mysqlDoctor] = await pool.execute(
+      "SELECT id FROM doctors WHERE mongo_id = ?",
+      [doctorId]
+    );
+
+    if (mysqlDoctor.length > 0) {
+      await pool.execute(
+        "DELETE FROM medications WHERE diagnosis_id IN (SELECT id FROM diagnosis WHERE doctor_id = ?)",
+        [mysqlDoctor[0].id]
+      );
+      await pool.execute(
+        "DELETE FROM future_checkups WHERE diagnosis_id IN (SELECT id FROM diagnosis WHERE doctor_id = ?)",
+        [mysqlDoctor[0].id]
+      );
+      await pool.execute("DELETE FROM diagnosis WHERE doctor_id = ?", [
+        mysqlDoctor[0].id,
+      ]);
+      await pool.execute("DELETE FROM doctors WHERE id = ?", [
+        mysqlDoctor[0].id,
+      ]);
+    }
+
+    res.json({
+      success: true,
+      message: "Doctor successfully deleted from both databases",
+    });
+  } catch (error) {
+    console.error("Error deleting doctor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete doctor",
+      error: error.message,
+    });
+  }
+};
+
 export {
   addDoctor,
   loginAdmin,
@@ -335,4 +383,5 @@ export {
   adminDashboard,
   appointmentCompleteAdmin,
   getAllDiagnoses,
+  deleteDoctor,
 };

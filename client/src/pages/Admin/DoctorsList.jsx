@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { AdminContext } from "../../context/AdminContext";
 
 const DoctorsList = () => {
-  const { doctors, aToken, getAllDoctors, changeAvailability } =
+  const { doctors, aToken, getAllDoctors, changeAvailability, deleteDoctor } =
     useContext(AdminContext);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,6 +19,12 @@ const DoctorsList = () => {
   const currentDoctors = doctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const handleDelete = (doctorId) => {
+    if (window.confirm("Are you sure you want to delete this doctor?")) {
+      deleteDoctor(doctorId);
+    }
+  };
 
   return (
     <div className="m-5">
@@ -40,13 +46,24 @@ const DoctorsList = () => {
                 {item.name}
               </p>
               <p className="text-zinc-600 text-sm">{item.speciality}</p>
-              <div className="mt-2 flex items-center gap-1 text-sm">
-                <input
-                  onChange={() => changeAvailability(item._id)}
-                  type="checkbox"
-                  checked={item.available}
-                />
-                <p>Available</p>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-sm">
+                  <input
+                    onChange={() => changeAvailability(item._id)}
+                    type="checkbox"
+                    checked={item.available}
+                  />
+                  <p>Available</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(item._id);
+                  }}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           </div>
