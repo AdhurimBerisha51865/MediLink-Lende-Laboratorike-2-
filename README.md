@@ -51,26 +51,27 @@ MediLink is a full-stack web platform designed to streamline doctor appointments
 
 This project requires a few environment variables to run properly.
 
-- For the **backend**, create a `.env` file.  
-- For the **frontend**, create a `.env.local` file.
+- For the **api**, create a `.env` file.  
+- For the **client**, create a `.env` file.
 
-### Backend `.env` variables include:
+### api `.env` variables include:
 
-MONGODB_URL=your_mongodb_connection_string
+- `MONGODB_URL` — your_mongodb_connection_string
+- `CLOUDINARY_NAME` — your_cloud_name
+- `CLOUDINARY_API_KEY` — your_api_key
+- `CLOUDINARY_SECRET_KEY` — your_api_secret
+- `ADMIN_EMAIL` — your_admin_email
+- `ADMIN_PASSWORD` — your_admin_password
+- `JWT_SECRET` — your_jwt_secret
+- `FRONTEND_URL` — http://localhost:5173
+- `STRIPE_SECRET_KEY` — your_stripe_secret_key
 
-CLOUDINARY_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_SECRET_KEY=your_api_secret
-ADMIN_EMAIL=your_admin_email
-ADMIN_PASSWORD=your_admin_password
-JWT_SECRET=your_jwt_secret
-FRONTEND_URL=http://localhost:5173
-STRIPE_SECRET_KEY=your_stripe_secret_key
-MYSQL_HOST=your_mysql_host
-MYSQL_USER=your_mysql_user
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_DB=your_mysql_database
+- `MYSQL_HOST` — your_mysql_host
+- `MYSQL_USER` — your_mysql_user
+- `MYSQL_PASSWORD` — your_mysql_password
+- `MYSQL_DB` — your_mysql_database
 
-### Frontend `.env` variables include:
-VITE_BACKEND_URL=http://localhost:4000
-VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+### client `.env` variables include:
+- `VITE_BACKEND_URL` — http://localhost:4000
+- `VITE_STRIPE_PUBLISHABLE_KEY` — your_stripe_publishable_key
+
