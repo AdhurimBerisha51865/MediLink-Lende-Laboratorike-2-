@@ -14,7 +14,7 @@ const TotalDiagnosis = () => {
   const [editingId, setEditingId] = useState(null);
   const [medicationsEdit, setMedicationsEdit] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [diagnosesPerPage] = useState(5);
+  const [diagnosesPerPage] = useState(5); // Items per page
 
   useEffect(() => {
     if (dToken) {
@@ -22,6 +22,7 @@ const TotalDiagnosis = () => {
     }
   }, [dToken]);
 
+  // Get current diagnoses for pagination
   const indexOfLastDiagnosis = currentPage * diagnosesPerPage;
   const indexOfFirstDiagnosis = indexOfLastDiagnosis - diagnosesPerPage;
   const currentDiagnoses = diagnosisList.slice(
@@ -29,6 +30,7 @@ const TotalDiagnosis = () => {
     indexOfLastDiagnosis
   );
 
+  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const startEdit = (diagnosis) => {
