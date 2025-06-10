@@ -1,5 +1,8 @@
 # MediLink – Doctor Appointment & Diagnosis System
 
+![MediLink](https://github.com/user-attachments/assets/a35639ab-ae5c-44b9-84e4-974e0188f97f)
+
+
 MediLink is a full-stack web platform designed to streamline doctor appointments, diagnosis tracking, and patient-doctor interactions. It offers a robust admin dashboard, secure authentication, image uploads, and online payments — all in one place.
 
 ## Features
