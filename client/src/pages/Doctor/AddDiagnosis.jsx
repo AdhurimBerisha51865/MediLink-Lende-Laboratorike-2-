@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { DiagnosisContext } from "../../context/diagnosisContext";
+import { DiagnosisContext } from "../../context/DiagnosisContext";
 
 const AddDiagnosis = () => {
   const { createDiagnosis, loading, backendUrl, dToken } =

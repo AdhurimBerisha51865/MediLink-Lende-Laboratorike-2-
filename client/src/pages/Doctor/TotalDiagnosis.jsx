@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { DiagnosisContext } from "../../context/diagnosisContext";
 import { assets } from "../../assets/assets";
+import { DiagnosisContext } from "../../context/DiagnosisContext";
 
 const TotalDiagnosis = () => {
   const {
